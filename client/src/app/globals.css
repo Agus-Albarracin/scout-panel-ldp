@@ -1,0 +1,67 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap");
+@import "tailwindcss";
+
+:root {
+  --bg: #0f0f0f;
+  --surface: #151515;
+  --surface-2: #1d1d1d;
+  --surface-3: #242424;
+  --text: #f2f2f2;
+  --muted: #a7a7a7;
+  --line: rgba(242, 242, 242, 0.1);
+  --line-strong: rgba(242, 242, 242, 0.18);
+  --primary: #00e094;
+  --blue: #0c65d4;
+  --violet: #7533fc;
+  --danger: #ff6b6b;
+  --danger-soft: rgba(255, 107, 107, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-width: 320px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(0, 224, 148, 0.12), transparent 30rem),
+    radial-gradient(circle at 94% 18%, rgba(117, 51, 252, 0.13), transparent 34rem),
+    var(--bg);
+  color: var(--text);
+  font-family: "Nunito Sans", Nunito, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 220% 0;
+  }
+  to {
+    background-position: -220% 0;
+  }
+}

@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Team {
+  id       String   @id @default(uuid())
+  name     String
+  country  String
+  logoUrl  String
+  players  Player[]
+
+  @@map("teams")
+}
+
+model Player {
+  id          String        @id @default(uuid())
+  name        String
+  birthDate   DateTime
+  nationality String
+  position    String
+  photoUrl    String
+  teamId      String
+  team        Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  stats       PlayerStats[]
+
+  @@index([name])
+  @@index([position])
+  @@index([nationality])
+  @@index([teamId])
+  @@map("players")
+}
+
+model Season {
+  id    String        @id @default(uuid())
+  name  String
+  year  Int
+  stats PlayerStats[]
+
+  @@map("seasons")
+}
+
+model PlayerStats {
+  id             String  @id @default(uuid())
+  playerId       String
+  seasonId       String
+  appearances    Int
+  goals          Int
+  assists        Int
+  yellowCards    Int
+  redCards       Int
+  minutesPlayed  Int
+  shots          Int
+  keyPasses      Int
+  tackles        Int
+  interceptions  Int
+  passAccuracy   Float
+  player         Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  season         Season  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, seasonId])
+  @@index([playerId])
+  @@index([seasonId])
+  @@map("player_stats")
+}
