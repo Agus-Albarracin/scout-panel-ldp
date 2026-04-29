@@ -12,7 +12,7 @@ export function PlayerDetail({ player, loading }) {
       {loading ? (
         <DetailSkeleton />
       ) : !player ? (
-        <div className="m-4 rounded-lg border border-transparent bg-[rgba(242,242,242,0.05)] px-4 py-3.5 text-center text-[var(--muted)]">Selecciona un jugador.</div>
+        <div className="m-4 rounded-lg border border-transparent bg-[rgba(242,242,242,0.05)] px-4 py-3.5 text-center text-[var(--muted)]">Selecciona un jugador sin presionar "comparar".</div>
       ) : (
         <>
           <PlayerSummary player={player} />

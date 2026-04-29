@@ -34,7 +34,8 @@ function CompareControls({ panel }) {
     <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-[minmax(0,1fr)_auto]">
       <label className="flex h-[46px] min-w-0 items-center gap-2.5 rounded-lg border border-[var(--line-strong)] bg-[#111] px-3 text-[var(--text)]">
         <CalendarDays size={17} />
-        <select className="w-full border-0 bg-transparent text-[var(--text)] outline-0" value={panel.seasonId} onChange={(event) => panel.setSeasonId(event.target.value)} aria-label="Comparison season">
+        
+        <select className="w-full border-0 bg-[#111] text-[var(--text)] outline-0" value={panel.seasonId} onChange={(event) => panel.setSeasonId(event.target.value)} aria-label="Comparison season">
           {panel.seasons.map((season) => (
             <option key={season.id} value={season.id}>
               {season.name}
