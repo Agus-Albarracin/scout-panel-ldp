@@ -50,7 +50,7 @@ export const playerService = {
     const uniqueIds = Array.from(new Set(query.ids));
 
     if (uniqueIds.length < 1 || uniqueIds.length > 3) {
-      throw new AppError("Comparison requires between 1 and 3 players", 400);
+      throw new AppError("Selecciona entre 1 y 3 jugadores", 400);
     }
 
     const season = query.seasonId

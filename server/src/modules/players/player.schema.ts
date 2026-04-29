@@ -33,6 +33,6 @@ export const comparePlayersQuerySchema = z.object({
   ids: z
     .string()
     .transform((value) => value.split(",").map((id) => id.trim()).filter(Boolean))
-    .pipe(z.array(z.uuid())),
+    .pipe(z.array(z.uuid()).min(1, "Selecciona al menos 1 jugador").max(3, "Puedes seleccionar hasta 3 jugadores")),
   seasonId: z.uuid().optional()
 });

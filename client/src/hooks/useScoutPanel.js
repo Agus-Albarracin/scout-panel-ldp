@@ -156,7 +156,7 @@ export function useScoutPanel() {
       }
 
       if (current.length >= 3) {
-        setCompareError("You can compare up to 3 players.");
+        setCompareError("Puedes seleccionar hasta 3 jugadores.");
         return current;
       }
 
@@ -173,14 +173,14 @@ export function useScoutPanel() {
   const runCompare = useCallback(async (ids = selectedIds, nextSeasonId = seasonId, options = {}) => {
     if (ids.length < 1) {
       if (!options.silent) {
-        setCompareError("Select at least 1 player.");
+        setCompareError("Selecciona al menos 1 jugador.");
       }
       setComparison(null);
       return;
     }
 
     if (!nextSeasonId) {
-      setCompareError("Select a season to compare players.");
+      setCompareError("Selecciona una temporada para ver las metricas.");
       return;
     }
 
@@ -196,7 +196,7 @@ export function useScoutPanel() {
         return ids.map((id) => byId.get(id)).filter(Boolean);
       });
     } catch (requestError) {
-      setCompareError(requestError.message || "Unable to compare players");
+      setCompareError(requestError.message || "No se pudieron cargar las metricas");
     } finally {
       setLoading((current) => ({ ...current, compare: false }));
     }
