@@ -171,9 +171,9 @@ export function useScoutPanel() {
   }
 
   const runCompare = useCallback(async (ids = selectedIds, nextSeasonId = seasonId, options = {}) => {
-    if (ids.length < 2) {
+    if (ids.length < 1) {
       if (!options.silent) {
-        setCompareError("Select at least 2 players.");
+        setCompareError("Select at least 1 player.");
       }
       setComparison(null);
       return;
@@ -207,7 +207,7 @@ export function useScoutPanel() {
   }
 
   useEffect(() => {
-    if (selectedIds.length >= 2 && seasonId) {
+    if (selectedIds.length >= 1 && seasonId) {
       runCompare(selectedIds, seasonId, { silent: true });
     }
   }, [selectedIds, seasonId, runCompare]);

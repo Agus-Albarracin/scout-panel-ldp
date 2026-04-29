@@ -28,7 +28,7 @@ export function CompareBox({ panel }) {
 }
 
 function CompareControls({ panel }) {
-  const canCompare = panel.selectedIds.length >= 2 && !panel.loading.compare;
+  const canCompare = panel.selectedIds.length >= 1 && !panel.loading.compare;
 
   return (
     <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-[minmax(0,1fr)_auto]">
@@ -68,7 +68,7 @@ function SelectedPlayers({ panel }) {
           );
         })
       )}
-      {panel.selectedIds.length === 1 ? <span className="text-[0.88rem] text-[var(--muted)]">Choose one more player to compare.</span> : null}
+      {panel.selectedIds.length === 1 ? <span className="text-[0.88rem] text-[var(--muted)]">Puedes sumar otro jugador para comparar lado a lado.</span> : null}
     </div>
   );
 }
@@ -78,7 +78,7 @@ function CompareEmpty() {
     <div className="grid min-h-[220px] place-items-center gap-2.5 px-7 py-7 text-center">
       <Swords className="text-[var(--primary)]" size={24} />
       <strong>Selecciona al menos 1 jugador.</strong>
-      <span className="text-[0.88rem] text-[var(--muted)]">Usa el botón de comparar de la lista. Selecciona 2 jugadores. Analiza su rendimiento.</span>
+      <span className="text-[0.88rem] text-[var(--muted)]">Usa el boton de comparar de la lista. Con 1 jugador ves sus metricas; con 2 o 3 comparas rendimientos.</span>
     </div>
   );
 }

@@ -5,72 +5,145 @@ import "dotenv/config";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
-const teams = [
+type PlayerRole =
+  | "attacking-fullback"
+  | "box-striker"
+  | "box-to-box"
+  | "centre-back"
+  | "creator"
+  | "creator-forward"
+  | "deep-playmaker"
+  | "finisher"
+  | "goalkeeper"
+  | "pressing-forward"
+  | "wide-creator";
+
+type Player = {
+  name: string;
+  birthDate: string;
+  nationality: string;
+  position: string;
+  teamName: string;
+  role: PlayerRole;
+  photo: string | null;
+};
+
+type TeamSeed = {
+  name: string;
+  country: string;
+  logoUrl: string;
+};
+
+type RoleProfile = {
+  minutes: number;
+  goals: number;
+  assists: number;
+  shots: number;
+  keyPasses: number;
+  tackles: number;
+  interceptions: number;
+  passAccuracy: number;
+  yellowCards: number;
+};
+
+type PlayerStatSeed = {
+  appearances: number;
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  redCards: number;
+  minutesPlayed: number;
+  shots: number;
+  keyPasses: number;
+  tackles: number;
+  interceptions: number;
+  passAccuracy: number;
+};
+
+const VALID_ROLES: readonly PlayerRole[] = [
+  "attacking-fullback",
+  "box-striker",
+  "box-to-box",
+  "centre-back",
+  "creator",
+  "creator-forward",
+  "deep-playmaker",
+  "finisher",
+  "goalkeeper",
+  "pressing-forward",
+  "wide-creator"
+];
+
+const teams: readonly TeamSeed[] = [
   { name: "CA Boca Juniors", country: "Argentina", logoUrl: "https://placehold.co/120x120/003f8f/f7d117?text=BOC" },
   { name: "CA River Plate", country: "Argentina", logoUrl: "https://placehold.co/120x120/f2f2f2/d71920?text=RIV" },
-  { name: "Flamengo", country: "Brasil", logoUrl: "https://placehold.co/120x120/e3262e/f2f2f2?text=FLA" },
-  { name: "Palmeiras", country: "Brasil", logoUrl: "https://placehold.co/120x120/006437/f2f2f2?text=PAL" },
-  { name: "Atletico Madrid", country: "Europa", logoUrl: "https://placehold.co/120x120/c8102e/f2f2f2?text=ATM" },
-  { name: "Inter", country: "Europa", logoUrl: "https://placehold.co/120x120/0057b8/0f0f0f?text=INT" },
-  { name: "Manchester City", country: "Inglaterra", logoUrl: "https://placehold.co/120x120/6cabdd/0f0f0f?text=MCI" },
+  { name: "Al Hilal", country: "Arabia Saudita", logoUrl: "https://placehold.co/120x120/005baa/f2f2f2?text=HIL" },
+  { name: "Arsenal", country: "Inglaterra", logoUrl: "https://placehold.co/120x120/ef0107/f2f2f2?text=ARS" },
+  { name: "Aston Villa", country: "Inglaterra", logoUrl: "https://placehold.co/120x120/670e36/f2f2f2?text=AVL" },
+  { name: "Atletico Madrid", country: "Espana", logoUrl: "https://placehold.co/120x120/c8102e/f2f2f2?text=ATM" },
+  { name: "Bayern Munich", country: "Alemania", logoUrl: "https://placehold.co/120x120/dc052d/f2f2f2?text=BAY" },
+  { name: "Benfica", country: "Portugal", logoUrl: "https://placehold.co/120x120/e83030/f2f2f2?text=BEN" },
+  { name: "Borussia Dortmund", country: "Alemania", logoUrl: "https://placehold.co/120x120/fde100/0f0f0f?text=BVB" },
+  { name: "Brentford", country: "Inglaterra", logoUrl: "https://placehold.co/120x120/e30613/f2f2f2?text=BRE" },
   { name: "Chelsea", country: "Inglaterra", logoUrl: "https://placehold.co/120x120/034694/f2f2f2?text=CHE" },
-  { name: "Real Madrid", country: "Europa", logoUrl: "https://placehold.co/120x120/f2f2f2/7533fc?text=RMA" },
-  { name: "Bayern Munich", country: "Europa", logoUrl: "https://placehold.co/120x120/dc052d/f2f2f2?text=BAY" },
-  { name: "Paris Saint-Germain", country: "Francia", logoUrl: "https://placehold.co/120x120/004170/f2f2f2?text=PSG" },
+  { name: "Como", country: "Italia", logoUrl: "https://placehold.co/120x120/005bac/f2f2f2?text=COM" },
+  { name: "Inter", country: "Italia", logoUrl: "https://placehold.co/120x120/0057b8/0f0f0f?text=INT" },
+  { name: "Liverpool", country: "Inglaterra", logoUrl: "https://placehold.co/120x120/c8102e/f2f2f2?text=LIV" },
+  { name: "Manchester City", country: "Inglaterra", logoUrl: "https://placehold.co/120x120/6cabdd/0f0f0f?text=MCI" },
   { name: "Olympique Lyonnais", country: "Francia", logoUrl: "https://placehold.co/120x120/003f8f/f2f2f2?text=OL" },
-  { name: "Benfica", country: "Europa", logoUrl: "https://placehold.co/120x120/e83030/f2f2f2?text=BEN" },
-  { name: "Sporting CP", country: "Europa", logoUrl: "https://placehold.co/120x120/008060/f2f2f2?text=SCP" },
-  { name: "Borussia Dortmund", country: "Europa", logoUrl: "https://placehold.co/120x120/fde100/0f0f0f?text=BVB" },
-  { name: "Arsenal", country: "Inglaterra", logoUrl: "https://placehold.co/120x120/ef0107/f2f2f2?text=ARS" }
+  { name: "Palmeiras", country: "Brasil", logoUrl: "https://placehold.co/120x120/006437/f2f2f2?text=PAL" },
+  { name: "Paris Saint-Germain", country: "Francia", logoUrl: "https://placehold.co/120x120/004170/f2f2f2?text=PSG" },
+  { name: "Real Madrid", country: "Espana", logoUrl: "https://placehold.co/120x120/f2f2f2/7533fc?text=RMA" },
+  { name: "Roma", country: "Italia", logoUrl: "https://placehold.co/120x120/8e1f2f/f2f2f2?text=ROM" }
 ];
 
-const players = [
+const players: readonly Player[] = [
   { name: "Miguel Angel Merentiel Serrano", birthDate: "1996-02-24", nationality: "Argentina", position: "Segundo delantero", teamName: "CA Boca Juniors", role: "finisher", photo: "Merentiel" },
-  { name: "Paulo Dybala", birthDate: "1993-11-15", nationality: "Argentina", position: "Segundo delantero", teamName: "Inter", role: "creator-forward" },
+  { name: "Paulo Dybala", birthDate: "1993-11-15", nationality: "Argentina", position: "Segundo delantero", teamName: "Roma", role: "creator-forward", photo: null },
   { name: "Facundo Colidio", birthDate: "2000-01-04", nationality: "Argentina", position: "Delantero centro", teamName: "CA River Plate", role: "creator-forward", photo: "Colidio" },
-  { name: "Darwin Nunez", birthDate: "1999-06-24", nationality: "Europa", position: "Delantero centro", teamName: "Benfica", role: "box-striker" },
-  { name: "Alvaro Morata", birthDate: "1992-10-23", nationality: "Europa", position: "Delantero centro", teamName: "Atletico Madrid", role: "finisher" },
-  { name: "Julian Alvarez", birthDate: "2000-01-31", nationality: "Argentina", position: "Delantero", teamName: "Atletico Madrid", role: "pressing-forward" },
-  { name: "Lautaro Martinez", birthDate: "1997-08-22", nationality: "Argentina", position: "Delantero", teamName: "Inter", role: "finisher" },
-  { name: "Erling Haaland", birthDate: "2000-07-21", nationality: "Europa", position: "Delantero", teamName: "Manchester City", role: "box-striker" },
-  { name: "Vinicius Junior", birthDate: "2000-07-12", nationality: "Brasil", position: "Extremo izquierdo", teamName: "Flamengo", role: "wide-creator" },
-  { name: "Gabriel Martinelli", birthDate: "2001-06-18", nationality: "Brasil", position: "Extremo izquierdo", teamName: "Arsenal", role: "wide-creator" },
-  { name: "Jamal Musiala", birthDate: "2003-02-26", nationality: "Europa", position: "Mediocampista ofensivo", teamName: "Bayern Munich", role: "creator" },
-  { name: "Martin Odegaard", birthDate: "1998-12-17", nationality: "Europa", position: "Mediocampista ofensivo", teamName: "Arsenal", role: "creator" },
-  { name: "Achraf Hakimi", birthDate: "1998-11-04", nationality: "Europa", position: "Lateral derecho", teamName: "Paris Saint-Germain", role: "attacking-fullback" },
-  { name: "Noussair Mazraoui", birthDate: "1997-11-14", nationality: "Europa", position: "Lateral derecho", teamName: "Bayern Munich", role: "attacking-fullback" },
-  { name: "Antonio Silva", birthDate: "2003-10-30", nationality: "Europa", position: "Defensor central", teamName: "Benfica", role: "centre-back" },
-  { name: "Franco Mastantuono", birthDate: "2007-08-14", nationality: "Argentina", position: "Mediocampista ofensivo", teamName: "CA River Plate", role: "creator" },
-  { name: "Florian Wirtz", birthDate: "2003-05-03", nationality: "Europa", position: "Mediocampista ofensivo", teamName: "Borussia Dortmund", role: "creator" },
-  { name: "Bukayo Saka", birthDate: "2001-09-05", nationality: "Inglaterra", position: "Extremo derecho", teamName: "Arsenal", role: "wide-creator" },
-  { name: "Cole Palmer", birthDate: "2002-05-06", nationality: "Inglaterra", position: "Extremo derecho", teamName: "Chelsea", role: "wide-creator" },
-  { name: "Phil Foden", birthDate: "2000-05-28", nationality: "Inglaterra", position: "Mediocampista ofensivo", teamName: "Manchester City", role: "creator" },
-  { name: "Rodrygo", birthDate: "2001-01-09", nationality: "Brasil", position: "Delantero", teamName: "Palmeiras", role: "creator-forward" },
-  { name: "Federico Valverde", birthDate: "1998-07-22", nationality: "Europa", position: "Mediocampista central", teamName: "Real Madrid", role: "box-to-box" },
-  { name: "Alessandro Bastoni", birthDate: "1999-04-13", nationality: "Europa", position: "Defensor central", teamName: "Inter", role: "centre-back" },
-  { name: "Ruben Dias", birthDate: "1997-05-14", nationality: "Europa", position: "Defensor central", teamName: "Manchester City", role: "centre-back" },
-  { name: "Emiliano Martinez", birthDate: "1992-09-02", nationality: "Argentina", position: "Arquero", teamName: "Arsenal", role: "goalkeeper" },
-  { name: "Gregor Kobel", birthDate: "1997-12-06", nationality: "Europa", position: "Arquero", teamName: "Borussia Dortmund", role: "goalkeeper" },
-  { name: "Yann Sommer", birthDate: "1988-12-17", nationality: "Europa", position: "Arquero", teamName: "Inter", role: "goalkeeper" },
-  { name: "Caoimhin Kelleher", birthDate: "1998-11-23", nationality: "Europa", position: "Arquero", teamName: "Chelsea", role: "goalkeeper" },
-  { name: "Joshua Kimmich", birthDate: "1995-02-08", nationality: "Europa", position: "Mediocampista central", teamName: "Bayern Munich", role: "deep-playmaker" },
-  { name: "Enzo Fernandez", birthDate: "2001-01-17", nationality: "Argentina", position: "Mediocampista defensivo", teamName: "Chelsea", role: "deep-playmaker" },
-  { name: "Declan Rice", birthDate: "1999-01-14", nationality: "Inglaterra", position: "Mediocampista defensivo", teamName: "Arsenal", role: "deep-playmaker" },
-  { name: "Joao Neves", birthDate: "2004-09-27", nationality: "Europa", position: "Mediocampista central", teamName: "Paris Saint-Germain", role: "box-to-box" },
-  { name: "Pablo Barrios", birthDate: "2003-06-15", nationality: "Europa", position: "Mediocampista central", teamName: "Atletico Madrid", role: "box-to-box" },
-  { name: "Evan Ferguson", birthDate: "2004-10-19", nationality: "Europa", position: "Delantero", teamName: "Benfica", role: "box-striker" },
-  { name: "Claudio Echeverri", birthDate: "2006-01-02", nationality: "Argentina", position: "Mediocampista ofensivo", teamName: "CA River Plate", role: "creator" },
-  { name: "William Saliba", birthDate: "2001-03-24", nationality: "Francia", position: "Defensor central", teamName: "Arsenal", role: "centre-back" },
-  { name: "Rayan Cherki", birthDate: "2003-08-17", nationality: "Francia", position: "Mediocampista ofensivo", teamName: "Olympique Lyonnais", role: "creator" },
-  { name: "Nuno Mendes", birthDate: "2002-06-19", nationality: "Europa", position: "Lateral izquierdo", teamName: "Sporting CP", role: "attacking-fullback" },
-  { name: "Theo Hernandez", birthDate: "1997-10-06", nationality: "Francia", position: "Lateral izquierdo", teamName: "Olympique Lyonnais", role: "attacking-fullback" },
-  { name: "Marcus Thuram", birthDate: "1997-08-06", nationality: "Francia", position: "Delantero centro", teamName: "Inter", role: "creator-forward" },
-  { name: "Gianluigi Donnarumma", birthDate: "1999-02-25", nationality: "Europa", position: "Arquero", teamName: "Paris Saint-Germain", role: "goalkeeper" },
-  { name: "Karim Adeyemi", birthDate: "2002-01-18", nationality: "Europa", position: "Delantero", teamName: "Borussia Dortmund", role: "wide-creator" },
-  { name: "Endrick", birthDate: "2006-07-21", nationality: "Brasil", position: "Delantero", teamName: "Palmeiras", role: "box-striker" }
+  { name: "Darwin Nunez", birthDate: "1999-06-24", nationality: "Uruguay", position: "Delantero centro", teamName: "Al Hilal", role: "box-striker", photo: null },
+  { name: "Alvaro Morata", birthDate: "1992-10-23", nationality: "Espana", position: "Delantero centro", teamName: "Como", role: "finisher", photo: null },
+  { name: "Julian Alvarez", birthDate: "2000-01-31", nationality: "Argentina", position: "Delantero", teamName: "Atletico Madrid", role: "pressing-forward", photo: null },
+  { name: "Lautaro Martinez", birthDate: "1997-08-22", nationality: "Argentina", position: "Delantero", teamName: "Inter", role: "finisher", photo: null },
+  { name: "Erling Haaland", birthDate: "2000-07-21", nationality: "Noruega", position: "Delantero", teamName: "Manchester City", role: "box-striker", photo: null },
+  { name: "Vinicius Junior", birthDate: "2000-07-12", nationality: "Brasil", position: "Extremo izquierdo", teamName: "Real Madrid", role: "wide-creator", photo: null },
+  { name: "Gabriel Martinelli", birthDate: "2001-06-18", nationality: "Brasil", position: "Extremo izquierdo", teamName: "Arsenal", role: "wide-creator", photo: null },
+  { name: "Jamal Musiala", birthDate: "2003-02-26", nationality: "Alemania", position: "Mediocampista ofensivo", teamName: "Bayern Munich", role: "creator", photo: null },
+  { name: "Martin Odegaard", birthDate: "1998-12-17", nationality: "Noruega", position: "Mediocampista ofensivo", teamName: "Arsenal", role: "creator", photo: null },
+  { name: "Achraf Hakimi", birthDate: "1998-11-04", nationality: "Marruecos", position: "Lateral derecho", teamName: "Paris Saint-Germain", role: "attacking-fullback", photo: null },
+  { name: "Noussair Mazraoui", birthDate: "1997-11-14", nationality: "Marruecos", position: "Lateral derecho", teamName: "Bayern Munich", role: "attacking-fullback", photo: null },
+  { name: "Antonio Silva", birthDate: "2003-10-30", nationality: "Portugal", position: "Defensor central", teamName: "Benfica", role: "centre-back", photo: null },
+  { name: "Franco Mastantuono", birthDate: "2007-08-14", nationality: "Argentina", position: "Mediocampista ofensivo", teamName: "Real Madrid", role: "creator", photo: null },
+  { name: "Florian Wirtz", birthDate: "2003-05-03", nationality: "Alemania", position: "Mediocampista ofensivo", teamName: "Liverpool", role: "creator", photo: null },
+  { name: "Bukayo Saka", birthDate: "2001-09-05", nationality: "Inglaterra", position: "Extremo derecho", teamName: "Arsenal", role: "wide-creator", photo: null },
+  { name: "Cole Palmer", birthDate: "2002-05-06", nationality: "Inglaterra", position: "Extremo derecho", teamName: "Chelsea", role: "wide-creator", photo: null },
+  { name: "Phil Foden", birthDate: "2000-05-28", nationality: "Inglaterra", position: "Mediocampista ofensivo", teamName: "Manchester City", role: "creator", photo: null },
+  { name: "Rodrygo", birthDate: "2001-01-09", nationality: "Brasil", position: "Delantero", teamName: "Real Madrid", role: "creator-forward", photo: null },
+  { name: "Federico Valverde", birthDate: "1998-07-22", nationality: "Uruguay", position: "Mediocampista central", teamName: "Real Madrid", role: "box-to-box", photo: null },
+  { name: "Alessandro Bastoni", birthDate: "1999-04-13", nationality: "Italia", position: "Defensor central", teamName: "Inter", role: "centre-back", photo: null },
+  { name: "Ruben Dias", birthDate: "1997-05-14", nationality: "Portugal", position: "Defensor central", teamName: "Manchester City", role: "centre-back", photo: null },
+  { name: "Emiliano Martinez", birthDate: "1992-09-02", nationality: "Argentina", position: "Arquero", teamName: "Aston Villa", role: "goalkeeper", photo: null },
+  { name: "Gregor Kobel", birthDate: "1997-12-06", nationality: "Suiza", position: "Arquero", teamName: "Borussia Dortmund", role: "goalkeeper", photo: null },
+  { name: "Yann Sommer", birthDate: "1988-12-17", nationality: "Suiza", position: "Arquero", teamName: "Inter", role: "goalkeeper", photo: null },
+  { name: "Caoimhin Kelleher", birthDate: "1998-11-23", nationality: "Irlanda", position: "Arquero", teamName: "Brentford", role: "goalkeeper", photo: null },
+  { name: "Joshua Kimmich", birthDate: "1995-02-08", nationality: "Alemania", position: "Mediocampista central", teamName: "Bayern Munich", role: "deep-playmaker", photo: null },
+  { name: "Enzo Fernandez", birthDate: "2001-01-17", nationality: "Argentina", position: "Mediocampista defensivo", teamName: "Chelsea", role: "deep-playmaker", photo: null },
+  { name: "Declan Rice", birthDate: "1999-01-14", nationality: "Inglaterra", position: "Mediocampista defensivo", teamName: "Arsenal", role: "deep-playmaker", photo: null },
+  { name: "Joao Neves", birthDate: "2004-09-27", nationality: "Portugal", position: "Mediocampista central", teamName: "Paris Saint-Germain", role: "box-to-box", photo: null },
+  { name: "Pablo Barrios", birthDate: "2003-06-15", nationality: "Espana", position: "Mediocampista central", teamName: "Atletico Madrid", role: "box-to-box", photo: null },
+  { name: "Evan Ferguson", birthDate: "2004-10-19", nationality: "Irlanda", position: "Delantero", teamName: "Roma", role: "box-striker", photo: null },
+  { name: "Claudio Echeverri", birthDate: "2006-01-02", nationality: "Argentina", position: "Mediocampista ofensivo", teamName: "CA River Plate", role: "creator", photo: null },
+  { name: "William Saliba", birthDate: "2001-03-24", nationality: "Francia", position: "Defensor central", teamName: "Arsenal", role: "centre-back", photo: null },
+  { name: "Rayan Cherki", birthDate: "2003-08-17", nationality: "Francia", position: "Mediocampista ofensivo", teamName: "Olympique Lyonnais", role: "creator", photo: null },
+  { name: "Nuno Mendes", birthDate: "2002-06-19", nationality: "Portugal", position: "Lateral izquierdo", teamName: "Paris Saint-Germain", role: "attacking-fullback", photo: null },
+  { name: "Theo Hernandez", birthDate: "1997-10-06", nationality: "Francia", position: "Lateral izquierdo", teamName: "Al Hilal", role: "attacking-fullback", photo: null },
+  { name: "Marcus Thuram", birthDate: "1997-08-06", nationality: "Francia", position: "Delantero centro", teamName: "Inter", role: "creator-forward", photo: null },
+  { name: "Gianluigi Donnarumma", birthDate: "1999-02-25", nationality: "Italia", position: "Arquero", teamName: "Paris Saint-Germain", role: "goalkeeper", photo: null },
+  { name: "Karim Adeyemi", birthDate: "2002-01-18", nationality: "Alemania", position: "Delantero", teamName: "Borussia Dortmund", role: "wide-creator", photo: null },
+  { name: "Endrick", birthDate: "2006-07-21", nationality: "Brasil", position: "Delantero", teamName: "Palmeiras", role: "box-striker", photo: null }
 ];
 
-const roleProfiles = {
+const roleProfiles: Record<PlayerRole, RoleProfile> = {
   "box-striker": { minutes: 0.72, goals: 0.78, assists: 0.12, shots: 4.25, keyPasses: 0.85, tackles: 0.55, interceptions: 0.22, passAccuracy: 75.5, yellowCards: 0.16 },
   finisher: { minutes: 0.78, goals: 0.58, assists: 0.18, shots: 3.35, keyPasses: 1.08, tackles: 0.78, interceptions: 0.34, passAccuracy: 77.8, yellowCards: 0.2 },
   "creator-forward": { minutes: 0.7, goals: 0.34, assists: 0.28, shots: 2.45, keyPasses: 1.85, tackles: 0.92, interceptions: 0.42, passAccuracy: 79.8, yellowCards: 0.14 },
@@ -84,7 +157,7 @@ const roleProfiles = {
   goalkeeper: { minutes: 0.91, goals: 0, assists: 0.01, shots: 0, keyPasses: 0.08, tackles: 0.05, interceptions: 0.02, passAccuracy: 74.5, yellowCards: 0.04 }
 };
 
-const playerOverrides = {
+const playerOverrides: Record<string, Partial<RoleProfile>> = {
   "Miguel Angel Merentiel Serrano": { goals: 0.48, assists: 0.22, shots: 3.22, keyPasses: 1.56, tackles: 0.82, interceptions: 0.56, passAccuracy: 76.4, minutes: 0.68 },
   "Facundo Colidio": { goals: 0.32, assists: 0.18, shots: 2.88, keyPasses: 1.92, tackles: 1.36, interceptions: 0.72, passAccuracy: 73.3, minutes: 0.59 },
   "Erling Haaland": { goals: 0.92, shots: 4.65, keyPasses: 0.7 },
@@ -93,7 +166,7 @@ const playerOverrides = {
   "Federico Valverde": { minutes: 0.9, tackles: 2.65, interceptions: 1.55, passAccuracy: 88.6 }
 };
 
-const seasonStatOverrides: Record<string, Record<number, Partial<ReturnType<typeof statsForBase>>>> = {
+const seasonStatOverrides: Record<string, Record<number, Partial<PlayerStatSeed>>> = {
   "Miguel Angel Merentiel Serrano": {
     2026: {
       appearances: 10,
@@ -140,7 +213,7 @@ const seasons = [
 
 const expectedFilterCoverage = {
   minOptionsPerFilter: 1,
-  minPlayersPerOption: 2,
+  minPlayersPerOption: 1,
   positions: [
     "Mediocampista ofensivo",
     "Mediocampista central",
@@ -156,16 +229,24 @@ const expectedFilterCoverage = {
     "Segundo delantero"
   ],
   nationalities: [
+    "Alemania",
     "Argentina",
     "Brasil",
+    "Espana",
     "Inglaterra",
-    "Europa",
-    "Francia"
+    "Francia",
+    "Irlanda",
+    "Italia",
+    "Marruecos",
+    "Noruega",
+    "Portugal",
+    "Suiza",
+    "Uruguay"
   ],
-  teamCountries: ["Argentina", "Brasil", "Inglaterra", "Europa", "Francia"]
+  teamCountries: ["Alemania", "Arabia Saudita", "Argentina", "Brasil", "Espana", "Francia", "Inglaterra", "Italia", "Portugal"]
 };
 
-function statsFor(player: (typeof players)[number], index: number, seasonIndex: number) {
+function statsFor(player: Player, index: number, seasonIndex: number): PlayerStatSeed {
   const season = seasons[seasonIndex];
   const generated = statsForBase(player, index, seasonIndex);
   const override = seasonStatOverrides[player.name]?.[season.year];
@@ -176,8 +257,8 @@ function statsFor(player: (typeof players)[number], index: number, seasonIndex: 
   };
 }
 
-function statsForBase(player: (typeof players)[number], index: number, seasonIndex: number) {
-  const profile = { ...roleProfiles[player.role as keyof typeof roleProfiles], ...(playerOverrides[player.name as keyof typeof playerOverrides] || {}) };
+function statsForBase(player: Player, index: number, seasonIndex: number): PlayerStatSeed {
+  const profile: RoleProfile = { ...roleProfiles[player.role], ...(playerOverrides[player.name] || {}) };
   const season = seasons[seasonIndex];
   const variance = 1 + (((index % 5) - 2) * 0.035) + ((seasonIndex - 1) * 0.035);
   const minutesRatio = clamp(profile.minutes * (0.96 + seasonIndex * 0.035 + ((index % 4) - 1) * 0.025), 0.38, 0.94);
@@ -247,6 +328,8 @@ async function main() {
 }
 
 function assertSeedCoverage() {
+  assertPlayerIntegrity();
+
   const positions = countBy(players.map((player) => player.position));
   const nationalities = countBy(players.map((player) => player.nationality));
   const teamByName = new Map(teams.map((team) => [team.name, team]));
@@ -277,6 +360,57 @@ function assertSeedCoverage() {
 
   if (teamsWithoutPlayers.length > 0) {
     throw new Error(`Seed teams without players: ${teamsWithoutPlayers.map((team) => team.name).join(", ")}`);
+  }
+}
+
+function assertPlayerIntegrity() {
+  const validRoles = new Set<PlayerRole>(VALID_ROLES);
+  const validPositions = new Set(expectedFilterCoverage.positions);
+  const teamByName = new Map(teams.map((team) => [team.name, team]));
+  const playerNames = new Set<string>();
+  const ambiguousNationalityPlayers = players.filter((player) => player.nationality === "Europa");
+  const ambiguousCountryTeams = teams.filter((team) => team.country === "Europa");
+  const duplicateNames = players
+    .filter((player) => {
+      if (playerNames.has(player.name)) {
+        return true;
+      }
+
+      playerNames.add(player.name);
+      return false;
+    })
+    .map((player) => player.name);
+  const invalidRoles = players.filter((player) => !validRoles.has(player.role));
+  const invalidPositions = players.filter((player) => !validPositions.has(player.position));
+  const missingTeams = players.filter((player) => !teamByName.has(player.teamName));
+  const invalidPhotos = players.filter((player) => player.photo !== null && player.photo.trim() === "");
+
+  if (ambiguousNationalityPlayers.length > 0) {
+    throw new Error(`Seed players cannot use Europa as nationality: ${ambiguousNationalityPlayers.map((player) => player.name).join(", ")}`);
+  }
+
+  if (ambiguousCountryTeams.length > 0) {
+    throw new Error(`Seed teams cannot use Europa as country: ${ambiguousCountryTeams.map((team) => team.name).join(", ")}`);
+  }
+
+  if (duplicateNames.length > 0) {
+    throw new Error(`Seed has duplicated player names: ${duplicateNames.join(", ")}`);
+  }
+
+  if (invalidRoles.length > 0) {
+    throw new Error(`Seed has invalid player roles: ${invalidRoles.map((player) => `${player.name} (${player.role})`).join(", ")}`);
+  }
+
+  if (invalidPositions.length > 0) {
+    throw new Error(`Seed has invalid player positions: ${invalidPositions.map((player) => `${player.name} (${player.position})`).join(", ")}`);
+  }
+
+  if (missingTeams.length > 0) {
+    throw new Error(`Seed has players with missing teams: ${missingTeams.map((player) => `${player.name} (${player.teamName})`).join(", ")}`);
+  }
+
+  if (invalidPhotos.length > 0) {
+    throw new Error(`Seed photo must be a non-empty string or null: ${invalidPhotos.map((player) => player.name).join(", ")}`);
   }
 }
 

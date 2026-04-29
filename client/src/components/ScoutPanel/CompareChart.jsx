@@ -4,43 +4,43 @@ const metricGroups = [
   {
     title: "Zona ofensiva",
     metrics: [
-      { key: "goalsP90", label: "Goles", raw: "goals", decimals: 2 },
-      { key: "expectedGoalsP90", label: "Expectativa de gol (xG)", raw: "expectedGoals", decimals: 2 },
-      { key: "shotsP90", label: "Disparos", raw: "shots", decimals: 2 },
-      { key: "goalConversion", label: "Eficacia", raw: "goalConversion", suffix: "%", decimals: 0 }
+      { key: "goalsP90", label: "Goles", raw: "goals", decimals: 2, max: 1 },
+      { key: "expectedGoalsP90", label: "Expectativa de gol (xG)", raw: "expectedGoals", decimals: 2, max: 1 },
+      { key: "shotsP90", label: "Disparos", raw: "shots", decimals: 2, max: 5 },
+      { key: "goalConversion", label: "Eficacia", raw: "goalConversion", suffix: "%", decimals: 0, max: 100 }
     ]
   },
   {
     title: "Oportunidades creadas",
     metrics: [
-      { key: "assistsP90", label: "Asistencias", raw: "assists", decimals: 2 },
-      { key: "expectedAssistsP90", label: "Expec. de asistencias (xA)", raw: "expectedAssists", decimals: 2 },
-      { key: "keyPassesP90", label: "Pases claves", raw: "keyPasses", decimals: 2 },
-      { key: "successfulPassesP90", label: "Pases logrados", raw: "successfulPasses", decimals: 2 },
-      { key: "passAccuracy", label: "% pases logrados", raw: "passAccuracy", suffix: "%", decimals: 0 }
+      { key: "assistsP90", label: "Asistencias", raw: "assists", decimals: 2, max: 0.6 },
+      { key: "expectedAssistsP90", label: "Expec. de asistencias (xA)", raw: "expectedAssists", decimals: 2, max: 0.6 },
+      { key: "keyPassesP90", label: "Pases claves", raw: "keyPasses", decimals: 2, max: 4 },
+      { key: "successfulPassesP90", label: "Pases logrados", raw: "successfulPasses", decimals: 2, max: 80 },
+      { key: "passAccuracy", label: "% pases logrados", raw: "passAccuracy", suffix: "%", decimals: 0, max: 100 }
     ]
   },
   {
     title: "Ritmo de trabajo",
     metrics: [
-      { key: "recoveriesP90", label: "Recuperacion de pelota", raw: "recoveries", decimals: 2 },
-      { key: "defActionsP90", label: "Intervención defensiva", raw: "defActions", decimals: 2 },
-      { key: "minutesShare", label: "Minutos jugados", raw: "minutesPlayed", suffix: "%", decimals: 0 },
-      { key: "cardDiscipline", label: "Disciplina", raw: "cardDiscipline", suffix: "%", decimals: 0 }
+      { key: "recoveriesP90", label: "Recuperacion de pelota", raw: "recoveries", decimals: 2, max: 6 },
+      { key: "defActionsP90", label: "Intervencion defensiva", raw: "defActions", decimals: 2, max: 6.5 },
+      { key: "minutesShare", label: "Minutos jugados", raw: "minutesPlayed", suffix: "%", decimals: 0, max: 100 },
+      { key: "cardDiscipline", label: "Disciplina", raw: "cardDiscipline", suffix: "%", decimals: 0, max: 100 }
     ]
   }
 ];
 
 const radarMetrics = [
-  { key: "recoveriesP90", label: "Recuperaciones" },
-  { key: "defActionsP90", label: "Acciones defensivas" },
-  { key: "shotsP90", label: "Disparos" },
-  { key: "goalConversion", label: "Eficacia" },
-  { key: "keyPassesP90", label: "Pases claves" },
-  { key: "passAccuracy", label: "% pases logrados" },
-  { key: "minutesShare", label: "Minutos" },
-  { key: "assistsP90", label: "Asistencias" },
-  { key: "goalsP90", label: "Goles" }
+  { key: "recoveriesP90", label: "Recuperaciones", max: 6 },
+  { key: "defActionsP90", label: "Acciones defensivas", max: 6.5 },
+  { key: "shotsP90", label: "Disparos", max: 5 },
+  { key: "goalConversion", label: "Eficacia", max: 100 },
+  { key: "keyPassesP90", label: "Pases claves", max: 4 },
+  { key: "passAccuracy", label: "% pases logrados", max: 100 },
+  { key: "minutesShare", label: "Minutos", max: 100 },
+  { key: "assistsP90", label: "Asistencias", max: 0.6 },
+  { key: "goalsP90", label: "Goles", max: 1 }
 ];
 
 export function CompareChart({ comparison }) {
@@ -114,9 +114,9 @@ function Radar({ players }) {
   const axisPoints = radarMetrics.map((metric, index) => pointFor(index, radarMetrics.length, maxRadius, center));
 
   return (
-    <svg className="h-auto min-h-[300px] w-full overflow-visible" viewBox="0 0 340 340" role="img" aria-label="Player percentile radar">
+    <svg className="h-auto min-h-[300px] w-full overflow-visible" viewBox="0 0 340 340" role="img" aria-label="Player performance radar">
       {rings.map((ring) => (
-        <polygon key={ring} className="fill-none stroke-[rgba(242,242,242,0.18)] stroke-[1]" points={axisPoints.map((point) => scalePoint(point, center, ring / 100)).join(" ")} />
+        <polygon key={ring} className="fill-none stroke-[rgba(242,242,242,0.18)] stroke-[1]" points={axisPoints.map((point) => pointToString(scalePoint(point, center, ring / 100))).join(" ")} />
       ))}
 
       {axisPoints.map((point, index) => (
@@ -125,13 +125,13 @@ function Radar({ players }) {
 
       {players.map((player) => {
         const points = radarMetrics.map((metric, index) => {
-          const radius = (player.percentiles[metric.key] / 100) * maxRadius;
+          const radius = ((player.scores[metric.key] || 0) / 100) * maxRadius;
           return pointFor(index, radarMetrics.length, radius, center);
         });
 
         return (
           <g key={player.id}>
-            <polygon className="fill-opacity-25 stroke-[3] mix-blend-screen" points={points.join(" ")} fill={player.color} stroke={player.color} />
+            <polygon points={points.map(pointToString).join(" ")} fill={player.color} fillOpacity="0.28" stroke={player.color} strokeOpacity="0.95" strokeWidth="3" />
             {points.map((point, index) => (
               <circle key={`${player.id}-${radarMetrics[index].key}`} className="stroke-[var(--surface)] stroke-2" cx={point.x} cy={point.y} r="4" fill={player.color} />
             ))}
@@ -189,14 +189,14 @@ function MetricTable({ players }) {
 }
 
 function MetricRow({ metric, players }) {
-  const bestValue = Math.max(...players.map((player) => player.percentiles[metric.key] || 0));
+  const bestValue = Math.max(...players.map((player) => player.scores[metric.key] || 0));
 
   return (
     <div className="grid min-h-[60px] grid-cols-1 items-center gap-2.5 rounded-lg border border-[rgba(242,242,242,0.045)] bg-[rgba(29,29,29,0.58)] p-2.5 shadow-[inset_0_1px_0_rgba(242,242,242,0.035)] md:grid-cols-[minmax(190px,0.86fr)_repeat(var(--columns),minmax(130px,1fr))]">
       <span className="font-extrabold">{metric.label}</span>
       {players.map((player) => {
-        const percentile = player.percentiles[metric.key] || 0;
-        const isLeader = percentile === bestValue && bestValue > 0;
+        const score = player.scores[metric.key] || 0;
+        const isLeader = score === bestValue && bestValue > 0;
 
         return (
           <div className="relative grid min-w-0 grid-cols-[auto_auto] gap-1.5 overflow-hidden pb-2" key={player.id} style={{ "--player-color": player.color }}>
@@ -204,8 +204,8 @@ function MetricRow({ metric, players }) {
               {formatMetric(player.derivedStats[metric.raw], metric)}
               {isLeader ? <span className="ml-2 inline-block size-[7px] rounded-full bg-[var(--player-color)] align-middle shadow-[0_0_12px_var(--player-color)]" /> : null}
             </b>
-            <small className="text-[var(--muted)]">{percentile} pts.</small>
-            <i className="absolute bottom-0 left-0 h-[3px] min-w-[5px] rounded-full bg-[var(--player-color)] opacity-80" style={{ width: `${Math.max(4, percentile)}%` }} />
+            <small className="text-[var(--muted)]">{score} pts.</small>
+            <i className="absolute bottom-0 left-0 h-[3px] min-w-[5px] rounded-full bg-[var(--player-color)] opacity-80" style={{ width: `${Math.max(4, score)}%` }} />
           </div>
         );
       })}
@@ -262,35 +262,33 @@ function buildDerivedStats(stats) {
 }
 
 function withPercentiles(players) {
-  const allMetrics = metricGroups.flatMap((group) => group.metrics.map((metric) => metric.key));
+  const allMetrics = metricGroups.flatMap((group) => group.metrics);
+  const metricMaxByKey = new Map(allMetrics.map((metric) => [metric.key, metric.max]));
 
   return players.map((player) => {
-    const percentiles = Object.fromEntries(
-      allMetrics.map((key) => {
-        const values = players.map((item) => Number(item.derivedStats[key]) || 0);
-        return [key, percentileFor(Number(player.derivedStats[key]) || 0, values)];
-      })
+    const scores = Object.fromEntries(
+      allMetrics.map((metric) => [
+        metric.key,
+        scoreFor(Number(player.derivedStats[metric.key]) || 0, metric.max)
+      ])
     );
-    const radarValues = radarMetrics.map((metric) => percentiles[metric.key] || 0);
+    const radarValues = radarMetrics.map((metric) => scores[metric.key] || scoreFor(Number(player.derivedStats[metric.key]) || 0, metricMaxByKey.get(metric.key) || metric.max));
     const averagePercentile = Math.round(radarValues.reduce((total, value) => total + value, 0) / radarValues.length);
 
     return {
       ...player,
-      percentiles,
+      scores,
       averagePercentile
     };
   });
 }
 
-function percentileFor(value, values) {
-  const max = Math.max(...values);
-  const min = Math.min(...values);
-
-  if (max === min) {
-    return max > 0 ? 100 : 0;
+function scoreFor(value, max) {
+  if (!Number.isFinite(value) || !Number.isFinite(max) || max <= 0) {
+    return 0;
   }
 
-  return Math.round(((value - min) / (max - min)) * 100);
+  return clampInt((value / max) * 100, 0, 100);
 }
 
 function pointFor(index, total, radius, center) {
@@ -308,6 +306,10 @@ function scalePoint(point, center, scale) {
   };
 }
 
+function pointToString(point) {
+  return `${point.x},${point.y}`;
+}
+
 function formatMetric(value, metric) {
   return `${formatNumber(value, metric.decimals ?? 0)}${metric.suffix || ""}`;
 }
@@ -322,4 +324,8 @@ function formatNumber(value, decimals) {
 function round(value, digits = 0) {
   const factor = 10 ** digits;
   return Math.round(value * factor) / factor;
+}
+
+function clampInt(value, min, max) {
+  return Math.round(Math.max(min, Math.min(max, value)));
 }

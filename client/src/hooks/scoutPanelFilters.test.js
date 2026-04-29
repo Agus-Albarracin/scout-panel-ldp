@@ -64,6 +64,18 @@ describe("scout panel filters", () => {
     assert.deepEqual(result.players.map((player) => player.id), ["colidio"]);
   });
 
+  it("filters by age range while preserving other active filters", () => {
+    const result = getFilteredPage(players, {
+      nationality: "Argentina",
+      minAge: "27",
+      maxAge: "30",
+      limit: 10
+    });
+
+    assert.deepEqual(result.players.map((player) => player.id), ["merentiel", "lautaro"]);
+    assert.equal(result.pagination.total, 2);
+  });
+
   it("searches across player, team, position and country text", () => {
     assert.deepEqual(getFilteredPage(players, { search: "boca", limit: 10 }).players.map((player) => player.id), ["merentiel"]);
     assert.deepEqual(getFilteredPage(players, { search: "forward", limit: 10 }).players.map((player) => player.id), ["colidio", "lautaro"]);

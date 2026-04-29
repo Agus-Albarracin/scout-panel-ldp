@@ -49,8 +49,8 @@ export const playerService = {
   async compare(query: PlayerCompareQuery) {
     const uniqueIds = Array.from(new Set(query.ids));
 
-    if (uniqueIds.length < 2 || uniqueIds.length > 3) {
-      throw new AppError("Comparison requires between 2 and 3 players", 400);
+    if (uniqueIds.length < 1 || uniqueIds.length > 3) {
+      throw new AppError("Comparison requires between 1 and 3 players", 400);
     }
 
     const season = query.seasonId

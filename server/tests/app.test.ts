@@ -45,8 +45,8 @@ vi.mock("../src/modules/players/player.repository", () => ({
     findMany: vi.fn(async () => mockPlayers),
     count: vi.fn(async () => mockPlayers.length),
     findById: vi.fn(),
-    findByIds: vi.fn(async () =>
-      mockPlayers.map((player) => ({
+    findByIds: vi.fn(async (ids: string[]) =>
+      mockPlayers.filter((player) => ids.includes(player.id)).map((player) => ({
         ...player,
         stats: [
           {
@@ -127,11 +127,12 @@ describe("Scout Panel API", () => {
     );
   });
 
-  it("GET /api/players/compare returns 400 with fewer than 2 ids", async () => {
+  it("GET /api/players/compare supports a single player profile", async () => {
     const response = await request(app).get("/api/players/compare?ids=11111111-1111-4111-8111-111111111111");
 
-    expect(response.status).toBe(400);
-    expect(response.body.error.message).toBe("Comparison requires between 2 and 3 players");
+    expect(response.status).toBe(200);
+    expect(response.body.players).toHaveLength(1);
+    expect(playerRepository.findByIds).toHaveBeenCalledWith(["11111111-1111-4111-8111-111111111111"], latestSeason.id);
   });
 
   it("GET /api/players/compare parses comma-separated ids", async () => {

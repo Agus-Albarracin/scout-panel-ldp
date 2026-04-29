@@ -36,6 +36,10 @@ export function Filters({ panel }) {
           {activeCount > 0 ? <span className="absolute -right-1.5 -top-1.5 grid size-[18px] place-items-center rounded-full border border-[rgba(0,224,148,0.5)] bg-[var(--primary)] text-[0.72rem] leading-none text-[#07110d]">{activeCount}</span> : null}
         </button>
 
+        <button className={iconButton} type="submit" disabled={panel.loading.list} title="Aplicar filtros" aria-label="Aplicar filtros">
+          <Check size={18} />
+        </button>
+
         <button className={iconButton} type="button" disabled={panel.loading.list} onClick={() => panel.refreshPlayers()} title="Actualizar jugadores" aria-label="Actualizar jugadores">
           <RefreshCw className={panel.loading.list ? "animate-spin" : ""} size={18} />
         </button>
@@ -74,6 +78,9 @@ export function Filters({ panel }) {
             </option>
           ))}
         </select>
+
+        <input className={field} name="minAge" type="number" min="0" value={panel.filters.minAge} onChange={(event) => panel.updateFilter("minAge", event.target.value)} placeholder="Edad min." aria-label="Edad minima" />
+        <input className={field} name="maxAge" type="number" min="0" value={panel.filters.maxAge} onChange={(event) => panel.updateFilter("maxAge", event.target.value)} placeholder="Edad max." aria-label="Edad maxima" />
       </div>
     </form>
   );
