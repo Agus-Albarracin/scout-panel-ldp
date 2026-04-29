@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { Bell, Search, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
+import { getSeasonLabel } from "@/hooks/scoutPanel/panelSummary";
 import { useScoutPanel } from "@/hooks/scoutPanel/useScoutPanel";
 import { CompareBox } from "./ScoutPanel/CompareBox";
 import { Filters } from "./ScoutPanel/Filters";
@@ -10,6 +11,7 @@ import { PlayerList } from "./ScoutPanel/PlayerList";
 
 export function ScoutPanel() {
   const panel = useScoutPanel();
+  const seasonLabel = getSeasonLabel(panel.seasons, panel.seasonId);
 
   return (
     <main className="mx-auto w-full max-w-[1440px] px-3 pb-8 pt-3 md:px-6 md:pb-9 md:pt-4">
@@ -33,14 +35,32 @@ export function ScoutPanel() {
       <section className="mb-5 grid grid-cols-1 gap-3.5 md:grid-cols-3">
         <Metric label="Jugadores" value={panel.pagination.total} />
         <Metric label="Seleccionados" value={`${panel.selectedIds.length}/3`} />
-        <Metric label="Temporada" value={panel.seasons.find((season) => season.id === panel.seasonId)?.name || "Latest"} />
+        <Metric label="Temporada" value={seasonLabel} />
       </section>
 
       <section className="mb-5 grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_390px]">
         <div className="grid gap-5">
-          <Filters panel={panel} />
+          <Filters
+            filters={panel.filters}
+            filterOptions={panel.filterOptions}
+            loading={panel.loading.list}
+            onApplyFilters={panel.applyFilters}
+            onRefresh={panel.refreshPlayers}
+            onReset={panel.resetFilters}
+            onUpdateFilter={panel.updateFilter}
+          />
           {panel.error ? <div className="rounded-lg border border-[rgba(255,107,107,0.45)] bg-[var(--danger-soft)] px-4 py-3.5 font-extrabold text-[#ffc9c9]">{panel.error}</div> : null}
-          <PlayerList panel={panel} />
+          <PlayerList
+            activePlayerId={panel.activePlayer?.id}
+            currentPage={panel.filters.page}
+            loading={panel.loading.list}
+            onChangePage={panel.changePage}
+            onSelectPlayer={panel.selectPlayer}
+            onToggleCompare={panel.toggleCompare}
+            pagination={panel.pagination}
+            players={panel.players}
+            selectedIds={panel.selectedIds}
+          />
         </div>
 
         <aside className="grid gap-5 xl:sticky xl:top-[92px]">
@@ -48,7 +68,17 @@ export function ScoutPanel() {
         </aside>
       </section>
 
-      <CompareBox panel={panel} />
+      <CompareBox
+        compareError={panel.compareError}
+        comparison={panel.comparison}
+        loading={panel.loading.compare}
+        onSeasonChange={panel.setSeasonId}
+        onTogglePlayer={panel.toggleCompare}
+        seasonId={panel.seasonId}
+        seasons={panel.seasons}
+        selectedIds={panel.selectedIds}
+        selectedSummaries={panel.selectedSummaries}
+      />
     </main>
   );
 }
