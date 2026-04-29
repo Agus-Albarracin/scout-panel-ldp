@@ -15,6 +15,65 @@ La app permite buscar jugadores, filtrarlos, ver sus datos principales y compara
 - Comparacion de 1 a 3 jugadores.
 - Graficos y metricas normalizadas para comparar rendimiento.
 
+## Decisiones tecnicas
+
+### Arquitectura del server
+
+El backend esta organizado con una idea cercana a arquitectura hexagonal, sin aplicarla de forma rigida para no sobredimensionar el challenge.
+
+La separacion principal es:
+
+- `routes`: definen los endpoints HTTP.
+- `schemas`: validan inputs con Zod.
+- `controllers`: reciben la request y delegan.
+- `services`: concentran reglas de aplicacion.
+- `repositories`: encapsulan el acceso a Prisma.
+- `mappers`: transforman modelos de base de datos en respuestas de API.
+- `shared`: contiene utilidades y errores reutilizables.
+
+Esta estructura permite que la logica de negocio no dependa directamente de Express ni quede mezclada con detalles de Prisma. Si manana cambia la forma de persistir datos o se agregan nuevos endpoints, el impacto queda mas acotado.
+
+### Modelado y seed
+
+El schema usa relaciones claras entre `Team`, `Player`, `Season` y `PlayerStats`.
+
+Se eligio separar temporadas y estadisticas para que un jugador pueda tener datos en distintos anos sin duplicar su informacion base. El seed carga 30 jugadores con clubes, nacionalidades permitidas y estadisticas en varias temporadas para poder probar filtros, detalle y comparacion de forma realista.
+
+Tambien se agregaron validaciones en el seed para evitar errores silenciosos, por ejemplo:
+
+- jugadores sin equipo existente;
+- equipos sin jugadores;
+- nacionalidades fuera del conjunto esperado;
+- roles o posiciones invalidas;
+- overrides apuntando a jugadores que ya no existen.
+
+### Escala 1-100 para metricas
+
+Las estadisticas crudas no siempre son comparables directamente. Por ejemplo, un jugador puede tener muchos pases completados porque jugo mas minutos, mientras otro puede destacar mas en eficacia o acciones por 90 minutos.
+
+Por eso, para la visualizacion se transforman las metricas a una escala de `0` a `100`, donde `100` representa el maximo esperado para esa habilidad. Esta normalizacion permite que el radar y la tabla comparen dimensiones distintas sin que una metrica de volumen rompa la lectura visual.
+
+La logica de normalizacion vive en `client/src/hooks/scoutPanel/compareMetrics.js`, separada del componente visual. De esa forma, `CompareChart` solo se ocupa de renderizar y no de calcular reglas de negocio.
+
+### Transicion al actualizar comparaciones
+
+Antes, al quitar un jugador seleccionado, la seccion de metricas desmontaba el grafico actual y cambiaba de estado de forma brusca. Eso generaba un corte visual y una sensacion de error, aunque la app estuviera funcionando.
+
+Se prefirio mantener el ultimo grafico visible mientras se carga la nueva comparacion, aplicando una transicion suave con opacidad y un indicador `Actualizando`. Este patron mejora la percepcion de continuidad: el usuario entiende que la informacion se esta recalculando sin perder el contexto visual.
+
+### Separacion de responsabilidades en el frontend
+
+El hook principal del panel se separo en piezas mas chicas dentro de `client/src/hooks/scoutPanel`:
+
+- `usePlayerCatalog`: carga jugadores, temporadas, filtros y paginacion.
+- `usePlayerDetail`: maneja el jugador activo.
+- `usePlayerComparison`: maneja seleccion, comparacion y errores de metricas.
+- `scoutPanelFilters`: contiene logica pura de filtrado.
+- `compareMetrics`: contiene logica pura para derivar metricas y scores.
+- `useScoutPanel`: funciona como fachada para que los componentes consuman una unica API.
+
+Con esto se evita mezclar logica pura, reglas de negocio y renderizado dentro de un mismo componente. Los componentes quedan mas declarativos y los calculos importantes se pueden testear de forma aislada.
+
 ## Tecnologias
 
 Backend:
@@ -316,6 +375,18 @@ El seed borra y vuelve a cargar los datos base.
 Docker se usa para levantar PostgreSQL. El backend y el frontend se corren con npm desde la maquina local.
 
 Esto significa que la base de datos esta dockerizada, pero la aplicacion completa no esta dentro de Docker.
+
+## Que mejoraria con mas tiempo
+
+- Dockerizar tambien backend y frontend para levantar todo el stack con un solo `docker compose up`.
+- Agregar tests de integracion contra una base PostgreSQL real de test.
+- Agregar tests de componentes para validar interacciones principales del frontend.
+- Mejorar el modelo estadistico con datos reales o una fuente externa confiable.
+- Agregar autenticacion si la app se orientara a usuarios reales.
+- Incorporar cache o paginacion remota completa si el dataset creciera mucho.
+- Agregar constraints adicionales en Prisma, como nombres de equipo unicos o temporadas unicas por ano.
+- Mejorar accesibilidad con pruebas de teclado y lectores de pantalla.
+- Agregar Storybook o una galeria de componentes para documentar la UI.
 
 ## Verificacion rapida
 
