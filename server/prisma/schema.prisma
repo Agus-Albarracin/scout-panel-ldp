@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -8,11 +9,11 @@ datasource db {
 }
 
 model Team {
-  id       String   @id @default(uuid())
-  name     String
-  country  String
-  logoUrl  String
-  players  Player[]
+  id      String   @id @default(uuid())
+  name    String
+  country String
+  logoUrl String
+  players Player[]
 
   @@map("teams")
 }
@@ -45,25 +46,36 @@ model Season {
 }
 
 model PlayerStats {
-  id             String  @id @default(uuid())
-  playerId       String
-  seasonId       String
-  appearances    Int
-  goals          Int
-  assists        Int
-  yellowCards    Int
-  redCards       Int
-  minutesPlayed  Int
-  shots          Int
-  keyPasses      Int
-  tackles        Int
-  interceptions  Int
-  passAccuracy   Float
-  player         Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  season         Season  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  id            String @id @default(uuid())
+  playerId      String
+  seasonId      String
+  appearances   Int
+  goals         Int
+  assists       Int
+  yellowCards   Int
+  redCards      Int
+  minutesPlayed Int
+  shots         Int
+  keyPasses     Int
+  tackles       Int
+  interceptions Int
+  passAccuracy  Float
+  player        Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  season        Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
 
   @@unique([playerId, seasonId])
   @@index([playerId])
   @@index([seasonId])
   @@map("player_stats")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
 }

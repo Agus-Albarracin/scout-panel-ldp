@@ -1,7 +1,9 @@
 ﻿import cors from "cors";
 import express from "express";
+import { authenticate } from "./middlewares/auth.middleware";
 import { errorMiddleware } from "./middlewares/error.middleware";
 import { notFoundMiddleware } from "./middlewares/not-found.middleware";
+import { authRoutes } from "./modules/auth/auth.routes";
 import { playerRoutes } from "./modules/players/player.routes";
 import { seasonRoutes } from "./modules/seasons/season.routes";
 import { teamRoutes } from "./modules/teams/team.routes";
@@ -18,9 +20,10 @@ app.get("/health", (_req, res) => {
   });
 });
 
-app.use("/api/players", playerRoutes);
-app.use("/api/teams", teamRoutes);
-app.use("/api/seasons", seasonRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/players", authenticate, playerRoutes);
+app.use("/api/teams", authenticate, teamRoutes);
+app.use("/api/seasons", authenticate, seasonRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);

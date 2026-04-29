@@ -1,5 +1,6 @@
 ﻿import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import bcrypt from "bcryptjs";
 import "dotenv/config";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
@@ -61,6 +62,11 @@ type PlayerStatSeed = {
 };
 
 const ALLOWED_COUNTRIES = ["Alemania", "Argentina", "Brasil", "España", "Francia", "Uruguay"] as const;
+const demoUser = {
+  name: "Scout Demo",
+  email: "scout@ldp.test",
+  password: "Scout1234"
+};
 
 const VALID_ROLES: readonly PlayerRole[] = [
   "attacking-fullback",
@@ -264,6 +270,15 @@ async function main() {
   await prisma.player.deleteMany();
   await prisma.season.deleteMany();
   await prisma.team.deleteMany();
+  await prisma.user.deleteMany();
+
+  await prisma.user.create({
+    data: {
+      name: demoUser.name,
+      email: demoUser.email,
+      passwordHash: await bcrypt.hash(demoUser.password, 10)
+    }
+  });
 
   const createdTeams = await Promise.all(teams.map((team) => prisma.team.create({ data: team })));
   const teamByName = new Map(createdTeams.map((team) => [team.name, team.id]));
