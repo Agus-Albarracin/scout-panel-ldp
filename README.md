@@ -14,6 +14,7 @@ La app permite buscar jugadores, filtrarlos, ver sus datos principales y compara
 - Vista de detalle por jugador.
 - Comparacion de 1 a 3 jugadores.
 - Graficos y metricas normalizadas para comparar rendimiento.
+- Autenticacion con JWT para proteger las rutas del panel.
 
 ## Decisiones tecnicas
 
@@ -145,6 +146,8 @@ Contenido esperado:
 DATABASE_URL="postgresql://scout:scout123@localhost:5432/scout_panel?schema=public"
 PORT=4000
 NODE_ENV=development
+JWT_SECRET="dev-secret-change-before-production"
+JWT_EXPIRES_IN="8h"
 ```
 
 ### Client
@@ -215,6 +218,13 @@ npm run db:seed
 
 Este comando carga jugadores, equipos, temporadas y estadisticas.
 
+Tambien crea un usuario demo para probar el panel:
+
+```bash
+Email: scout@ldp.test
+Password: Scout1234
+```
+
 ### 5. Levantar la API
 
 ```bash
@@ -280,6 +290,9 @@ http://localhost:3000
 
 ```bash
 GET /health
+POST /api/auth/register
+POST /api/auth/login
+GET /api/auth/me
 GET /api/players
 GET /api/players/:id
 GET /api/players/compare?ids=<id1>[,<id2>,<id3>]&seasonId=<seasonId>
@@ -287,6 +300,12 @@ GET /api/teams
 GET /api/teams/:id
 GET /api/seasons
 GET /api/seasons/latest
+```
+
+Las rutas `/api/players`, `/api/teams` y `/api/seasons` requieren token JWT:
+
+```bash
+Authorization: Bearer <token>
 ```
 
 Ejemplo de filtro:

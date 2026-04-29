@@ -1,5 +1,7 @@
-﻿import request from "supertest";
+import request from "supertest";
+import jwt from "jsonwebtoken";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { env } from "../src/config/env";
 
 const mockPlayers = [
   {
@@ -38,6 +40,9 @@ const latestSeason = {
   id: "33333333-3333-4333-8333-333333333333",
   name: "2024/2025",
   year: 2025
+};
+const authHeader = {
+  Authorization: `Bearer ${jwt.sign({ sub: "test-user" }, env.JWT_SECRET)}`
 };
 
 vi.mock("../src/modules/players/player.repository", () => ({
@@ -98,8 +103,15 @@ describe("Scout Panel API", () => {
     });
   });
 
-  it("GET /api/players returns paginated players", async () => {
+  it("rejects protected routes without token", async () => {
     const response = await request(app).get("/api/players");
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.message).toBe("Authentication token is required");
+  });
+
+  it("GET /api/players returns paginated players", async () => {
+    const response = await request(app).get("/api/players").set(authHeader);
 
     expect(response.status).toBe(200);
     expect(response.body.data).toHaveLength(2);
@@ -112,7 +124,7 @@ describe("Scout Panel API", () => {
   });
 
   it("GET /api/players applies basic filters", async () => {
-    const response = await request(app).get("/api/players?search=julian&position=Forward&nationality=Argentina&teamCountry=Europe&minAge=20&maxAge=30&page=2&limit=5");
+    const response = await request(app).get("/api/players?search=julian&position=Forward&nationality=Argentina&teamCountry=Europe&minAge=20&maxAge=30&page=2&limit=5").set(authHeader);
 
     expect(response.status).toBe(200);
     expect(playerRepository.findMany).toHaveBeenCalledWith(
@@ -128,7 +140,7 @@ describe("Scout Panel API", () => {
   });
 
   it("GET /api/players/compare supports a single player profile", async () => {
-    const response = await request(app).get("/api/players/compare?ids=11111111-1111-4111-8111-111111111111");
+    const response = await request(app).get("/api/players/compare?ids=11111111-1111-4111-8111-111111111111").set(authHeader);
 
     expect(response.status).toBe(200);
     expect(response.body.players).toHaveLength(1);
@@ -136,9 +148,9 @@ describe("Scout Panel API", () => {
   });
 
   it("GET /api/players/compare parses comma-separated ids", async () => {
-    const response = await request(app).get(
-      "/api/players/compare?ids=11111111-1111-4111-8111-111111111111,22222222-2222-4222-8222-222222222222&seasonId=33333333-3333-4333-8333-333333333333"
-    );
+    const response = await request(app)
+      .get("/api/players/compare?ids=11111111-1111-4111-8111-111111111111,22222222-2222-4222-8222-222222222222&seasonId=33333333-3333-4333-8333-333333333333")
+      .set(authHeader);
 
     expect(response.status).toBe(200);
     expect(response.body.players).toHaveLength(2);
@@ -149,10 +161,9 @@ describe("Scout Panel API", () => {
   });
 
   it("GET /api/seasons/latest returns latest season", async () => {
-    const response = await request(app).get("/api/seasons/latest");
+    const response = await request(app).get("/api/seasons/latest").set(authHeader);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(latestSeason);
   });
 });
-

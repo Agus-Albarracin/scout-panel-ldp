@@ -1,7 +1,23 @@
-﻿const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const TOKEN_KEY = "scout_panel_token";
 
-async function apiGet(path) {
-  const response = await fetch(`${API_URL}${path}`, { cache: "no-store" });
+async function apiRequest(path, options = {}) {
+  const token = getAuthToken();
+  const headers = new Headers(options.headers);
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  if (options.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const response = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers,
+    cache: "no-store"
+  });
 
   if (!response.ok) {
     let message = `Request failed with status ${response.status}`;
@@ -17,6 +33,49 @@ async function apiGet(path) {
   }
 
   return response.json();
+}
+
+async function apiGet(path) {
+  return apiRequest(path);
+}
+
+async function apiPost(path, body) {
+  return apiRequest(path, {
+    method: "POST",
+    body: JSON.stringify(body)
+  });
+}
+
+export function getAuthToken() {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  return window.localStorage.getItem(TOKEN_KEY) || "";
+}
+
+export function setAuthToken(token) {
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(TOKEN_KEY, token);
+  }
+}
+
+export function clearAuthToken() {
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem(TOKEN_KEY);
+  }
+}
+
+export function login(credentials) {
+  return apiPost("/api/auth/login", credentials);
+}
+
+export function registerAccount(data) {
+  return apiPost("/api/auth/register", data);
+}
+
+export function getCurrentUser() {
+  return apiGet("/api/auth/me");
 }
 
 function addParam(params, key, value) {
@@ -54,4 +113,3 @@ export function comparePlayers(ids, seasonId) {
 
   return apiGet(`/api/players/compare?${params.toString()}`);
 }
-
