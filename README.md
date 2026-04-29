@@ -1,78 +1,182 @@
 # Scout Panel LDP
 
-Aplicacion full stack para scouting de futbolistas. El proyecto combina una API REST en Express + Prisma con un cliente Next.js orientado a busqueda, filtrado y comparacion de jugadores.
+Aplicacion full stack para scouting de futbolistas. Tiene una API REST con Node.js, Express, TypeScript, Prisma y PostgreSQL, mas un cliente web hecho con Next.js, React y Tailwind CSS.
 
-## Puntos fuertes
+La app permite buscar jugadores, filtrarlos, ver sus datos principales y comparar metricas por temporada.
 
-- Dataset de jugadores normalizado y tipado en `server/prisma/seed.ts`.
-- Separacion clara entre datos base, perfiles estadisticos por rol, ajustes individuales y overrides por temporada.
-- Filtros combinables por busqueda, posicion, nacionalidad, pais del club y rango de edad.
-- Paginacion server-side con limite configurable.
-- Comparacion de 2 a 3 jugadores por temporada.
-- Validacion de entrada con Zod para queries, parametros y rangos invalidos.
-- Manejo centralizado de errores y respuestas consistentes.
-- Prisma + PostgreSQL para persistencia relacional.
-- Frontend con Tailwind, paleta LDP y flujo de scouting responsive.
+## Que incluye
 
-## Stack
+- API REST para jugadores, equipos y temporadas.
+- Base de datos PostgreSQL levantada con Docker.
+- Prisma para crear las tablas y consultar datos.
+- Seed con 30 jugadores y estadisticas en varias temporadas.
+- Filtros por busqueda, posicion, nacionalidad, pais del club y edad.
+- Vista de detalle por jugador.
+- Comparacion de 1 a 3 jugadores.
+- Graficos y metricas normalizadas para comparar rendimiento.
 
-- Server: Node.js, Express, TypeScript, Prisma, PostgreSQL, Zod, Vitest.
-- Client: Next.js, React, Tailwind CSS, lucide-react.
+## Tecnologias
 
-## API
+Backend:
 
-Base local por defecto:
+- Node.js
+- Express
+- TypeScript
+- Prisma
+- PostgreSQL
+- Zod
+- Vitest
+
+Frontend:
+
+- Next.js
+- React
+- Tailwind CSS
+- lucide-react
+
+## Requisitos antes de empezar
+
+Instalar estas herramientas:
+
+- Node.js 20 o superior
+- npm
+- Docker Desktop
+- Git
+
+Para verificar si estan instaladas:
+
+```bash
+node -v
+npm -v
+docker -v
+git --version
+```
+
+## Estructura del proyecto
+
+```bash
+scout-panel-ldp/
+  client/   # Aplicacion web con Next.js
+  server/   # API, Prisma, Docker y base de datos
+```
+
+## Variables de entorno
+
+El proyecto no sube los archivos `.env` reales a Git. Por eso hay archivos `.example` que sirven como plantilla.
+
+### Server
+
+Crear el archivo `.env` dentro de `server`:
+
+```bash
+cd server
+cp .env.example .env
+```
+
+En Windows PowerShell tambien podes usar:
+
+```powershell
+cd server
+Copy-Item .env.example .env
+```
+
+Contenido esperado:
+
+```bash
+DATABASE_URL="postgresql://scout:scout123@localhost:5432/scout_panel?schema=public"
+PORT=4000
+NODE_ENV=development
+```
+
+### Client
+
+Crear el archivo `.env.local` dentro de `client`:
+
+```bash
+cd client
+cp .env.local.example .env.local
+```
+
+En Windows PowerShell tambien podes usar:
+
+```powershell
+cd client
+Copy-Item .env.local.example .env.local
+```
+
+Contenido esperado:
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:4000
+```
+
+## Como levantar el proyecto desde cero
+
+Abrir una terminal en la raiz del proyecto.
+
+### 1. Levantar la base de datos
+
+```bash
+cd server
+docker compose up -d
+```
+
+Esto crea un contenedor de PostgreSQL con:
+
+- Usuario: `scout`
+- Password: `scout123`
+- Base de datos: `scout_panel`
+- Puerto local: `5432`
+
+Para revisar que el contenedor este activo:
+
+```bash
+docker ps
+```
+
+### 2. Instalar dependencias del server
+
+```bash
+npm install
+```
+
+### 3. Crear las tablas en la base
+
+```bash
+npm run db:migrate
+```
+
+Este comando ejecuta las migraciones de Prisma y crea las tablas necesarias.
+
+### 4. Cargar datos de prueba
+
+```bash
+npm run db:seed
+```
+
+Este comando carga jugadores, equipos, temporadas y estadisticas.
+
+### 5. Levantar la API
+
+```bash
+npm run dev
+```
+
+La API queda disponible en:
 
 ```bash
 http://localhost:4000
 ```
 
-Endpoints principales:
+Probar que funciona:
 
 ```bash
-GET /health
-GET /api/players
-GET /api/players/:id
-GET /api/players/compare?ids=<id1>,<id2>[,<id3>]&seasonId=<seasonId>
-GET /api/teams
-GET /api/teams/:id
-GET /api/seasons
-GET /api/seasons/latest
+http://localhost:4000/health
 ```
 
-Filtros disponibles en `GET /api/players`:
+## Levantar el frontend
 
-```bash
-search
-position
-nationality
-teamCountry
-minAge
-maxAge
-page
-limit
-```
-
-Ejemplo:
-
-```bash
-GET /api/players?nationality=Argentina&position=Delantero&minAge=20&maxAge=30&page=1&limit=10
-```
-
-## Instalacion
-
-### Server
-
-```bash
-cd server
-npm install
-docker compose up -d
-npx prisma migrate dev
-npm run db:seed
-npm run dev
-```
-
-### Client
+Abrir otra terminal desde la raiz del proyecto.
 
 ```bash
 cd client
@@ -80,10 +184,56 @@ npm install
 npm run dev
 ```
 
-URL local del cliente:
+El cliente queda disponible en:
 
 ```bash
 http://localhost:3000
+```
+
+## Orden recomendado para correr todo
+
+Terminal 1:
+
+```bash
+cd server
+docker compose up -d
+npm install
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
+
+Terminal 2:
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+Despues abrir:
+
+```bash
+http://localhost:3000
+```
+
+## Endpoints principales
+
+```bash
+GET /health
+GET /api/players
+GET /api/players/:id
+GET /api/players/compare?ids=<id1>[,<id2>,<id3>]&seasonId=<seasonId>
+GET /api/teams
+GET /api/teams/:id
+GET /api/seasons
+GET /api/seasons/latest
+```
+
+Ejemplo de filtro:
+
+```bash
+GET /api/players?nationality=Argentina&position=Delantero&minAge=20&maxAge=30&page=1&limit=10
 ```
 
 ## Scripts utiles
@@ -91,32 +241,94 @@ http://localhost:3000
 Server:
 
 ```bash
-npm run dev
-npm run build
-npm run test
-npm run db:seed
+npm run dev        # Levanta la API en desarrollo
+npm run build      # Compila TypeScript
+npm run start      # Ejecuta la API compilada
+npm run test       # Corre tests
+npm run db:migrate # Ejecuta migraciones
+npm run db:seed    # Carga datos de prueba
 ```
 
 Client:
 
 ```bash
-npm run dev
-npm run build
-npm test
+npm run dev   # Levanta Next.js en desarrollo
+npm run build # Genera build de produccion
+npm run start # Ejecuta el build
+npm test      # Corre tests del cliente
 ```
 
-## Variables de entorno
+## Problemas comunes
 
-Server:
+### El puerto 5432 ya esta ocupado
+
+Puede pasar si ya tenes PostgreSQL instalado localmente. Podes detener tu Postgres local o cambiar el puerto en `server/docker-compose.yml`.
+
+Ejemplo:
+
+```yaml
+ports:
+  - "5433:5432"
+```
+
+Si haces eso, tambien cambia el puerto en `server/.env`:
 
 ```bash
-DATABASE_URL=postgresql://...
+DATABASE_URL="postgresql://scout:scout123@localhost:5433/scout_panel?schema=public"
 ```
 
-Client:
+### La API no conecta con la base
+
+Revisar:
+
+```bash
+docker ps
+```
+
+Tambien confirmar que existe `server/.env` y que `DATABASE_URL` sea igual al de `.env.example`.
+
+### El frontend no muestra datos
+
+Revisar que la API este corriendo en:
+
+```bash
+http://localhost:4000/health
+```
+
+Tambien revisar que `client/.env.local` tenga:
 
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:4000
 ```
 
-Los archivos `.env.example` quedan versionados como referencia. Los `.env` reales estan ignorados por Git.
+### Quiero reiniciar los datos
+
+Desde `server`:
+
+```bash
+npm run db:seed
+```
+
+El seed borra y vuelve a cargar los datos base.
+
+## Notas sobre Docker
+
+Docker se usa para levantar PostgreSQL. El backend y el frontend se corren con npm desde la maquina local.
+
+Esto significa que la base de datos esta dockerizada, pero la aplicacion completa no esta dentro de Docker.
+
+## Verificacion rapida
+
+Desde `server`:
+
+```bash
+npm run build
+npm run test
+```
+
+Desde `client`:
+
+```bash
+npm run build
+npm test
+```
