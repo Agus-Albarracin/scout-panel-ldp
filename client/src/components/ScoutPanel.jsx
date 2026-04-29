@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { Bell, Search, Shield } from "lucide-react";
-import { useScoutPanel } from "@/hooks/useScoutPanel";
+import { useScoutPanel } from "@/hooks/scoutPanel/useScoutPanel";
 import { CompareBox } from "./ScoutPanel/CompareBox";
 import { Filters } from "./ScoutPanel/Filters";
 import { Metric } from "./ScoutPanel/Metric";
