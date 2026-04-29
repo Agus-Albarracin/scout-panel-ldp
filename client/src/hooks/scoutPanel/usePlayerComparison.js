@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { comparePlayers } from "@/lib/api";
 
 export function usePlayerComparison({ players, activePlayer, seasonId }) {
@@ -9,6 +9,11 @@ export function usePlayerComparison({ players, activePlayer, seasonId }) {
   const [comparison, setComparison] = useState(null);
   const [loading, setLoading] = useState(false);
   const [compareError, setCompareError] = useState("");
+
+  const selectedSummaries = useMemo(
+    () => selectedIds.map((id) => getPlayerSummary(id)),
+    [activePlayer, comparison, players, selectedIds, selectedPlayers]
+  );
 
   function getPlayerSummary(id) {
     return (
@@ -20,13 +25,18 @@ export function usePlayerComparison({ players, activePlayer, seasonId }) {
   }
 
   function toggleCompare(id) {
-    setComparison(null);
     setCompareError("");
 
     setSelectedIds((current) => {
       if (current.includes(id)) {
+        const nextIds = current.filter((item) => item !== id);
         setSelectedPlayers((selected) => selected.filter((player) => player.id !== id));
-        return current.filter((item) => item !== id);
+
+        if (nextIds.length === 0) {
+          setComparison(null);
+        }
+
+        return nextIds;
       }
 
       if (current.length >= 3) {
@@ -85,6 +95,7 @@ export function usePlayerComparison({ players, activePlayer, seasonId }) {
   return {
     selectedIds,
     selectedPlayers,
+    selectedSummaries,
     comparison,
     loading,
     compareError,

@@ -22,6 +22,7 @@ export function useScoutPanel() {
     activePlayer: detail.activePlayer,
     selectedIds: comparison.selectedIds,
     selectedPlayers: comparison.selectedPlayers,
+    selectedSummaries: comparison.selectedSummaries,
     comparison: comparison.comparison,
     loading: {
       list: catalog.loading,
