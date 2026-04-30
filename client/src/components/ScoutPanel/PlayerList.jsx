@@ -73,7 +73,7 @@ function PlayerRow({ active, onCompare, onSelect, player, selected }) {
       <div>
         <strong className="m-0 block overflow-hidden text-ellipsis whitespace-nowrap text-base">{player.name}</strong>
         <span className="text-[0.88rem] text-[var(--muted)]">
-          {player.position} - {player.age} anos - {player.nationality}
+          {player.position} - {player.age} años - {player.nationality}
         </span>
       </div>
       <div className="col-start-2 flex min-w-0 items-center gap-2 md:col-auto">
